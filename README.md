@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PMF Insights — Frontend
+
+Next.js frontend for the PMF Insights diagnostic tool. Founders answer 5 targeted questions and receive an AI-generated, data-backed PMF report with scores, risk signals, and a Sprint 0 action plan.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS, tw-animate-css
+- **Animations:** Framer Motion
+- **Charts:** Recharts (radar, area, funnel)
+- **UI Libraries:** Aceternity UI, Magic UI, shadcn/ui (Radix primitives)
+- **Analytics:** PostHog (explicit events only, autocapture off)
+- **Testing:** Jest + React Testing Library
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.local.example .env.local
+# Fill in NEXT_PUBLIC_API_URL and optionally NEXT_PUBLIC_POSTHOG_KEY
+
+# Run dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API base URL (e.g. `http://localhost:3001`) |
+| `NEXT_PUBLIC_POSTHOG_KEY` | No | PostHog project API key (analytics disabled if empty) |
+| `NEXT_PUBLIC_POSTHOG_HOST` | No | PostHog host (defaults to `https://us.i.posthog.com`) |
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── layout.tsx          # Root layout + PostHog init
+│   ├── page.tsx            # Landing page (hero, how-it-works, testimonials, CTA)
+│   └── PostHogInit.tsx     # Client-side PostHog initialization
+├── components/
+│   ├── chat/               # Assessment flow components
+│   │   ├── AssessmentWizard.tsx   # Main wizard orchestrator (question → analysis → preview → report)
+│   │   ├── AnalysisLoader.tsx     # Pipeline loading animation
+│   │   ├── PreviewCards.tsx       # Email gate with report preview
+│   │   └── Report.tsx            # Full 9-section report dashboard
+│   ├── landing/
+│   │   └── HeroSection.tsx       # Landing page hero
+│   └── ui/                 # Reusable UI components
+│       ├── aceternity/     # Aceternity UI (spotlight, sparkles, floating navbar, etc.)
+│       └── magicui/        # Magic UI (shimmer button, magic card, number ticker)
+├── hooks/
+│   └── useAssessment.ts    # Core assessment state machine + API integration
+├── lib/
+│   ├── api.ts              # Backend API client
+│   ├── constants.ts        # Questions, report sections, config
+│   ├── posthog.ts          # PostHog SDK wrapper (track, identify, reset)
+│   ├── types.ts            # TypeScript type definitions
+│   └── utils.ts            # Utility functions (cn, etc.)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## User Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Landing** — Hero with CTA, how-it-works cards, testimonials
+2. **Assessment** — 5 questions (4 textarea + 1 select) with real-time micro-insights
+3. **Analysis** — AI pipeline runs (classification → research → scoring → report generation)
+4. **Email Gate** — Preview cards shown, full report unlocked after email submission
+5. **Report** — Interactive dashboard with PMF score gauge, radar chart, dimension bars, AARRR funnel, growth trajectory, and 9 insight cards
 
-## Deploy on Vercel
+## Analytics Events
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+13 PostHog events track the full funnel. Privacy-safe: no PII, only email domain, answer length (not text), autocapture disabled.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Event | Funnel Stage |
+|-------|-------------|
+| `cta_clicked` | Landing |
+| `assessment_started` | Assessment |
+| `question_viewed` | Assessment |
+| `question_answered` | Assessment |
+| `insight_displayed` | Assessment |
+| `analysis_started` | Pipeline |
+| `analysis_completed` | Pipeline |
+| `analysis_failed` | Pipeline |
+| `email_submitted` | Conversion |
+| `report_unlocked` | Conversion |
+| `report_viewed` | Report |
+| `report_section_viewed` | Report |
+| `report_pdf_emailed` | Report |
+
+## Scripts
+
+```bash
+npm run dev       # Development server (Turbopack)
+npm run build     # Production build
+npm run start     # Start production server
+npm run lint      # ESLint
+npm test          # Jest tests
+```
