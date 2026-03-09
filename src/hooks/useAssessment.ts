@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 
-import type { UserResponse, PreviewContent, ReportData } from '@/lib/types'
+import type { PreviewContent, ReportData } from '@/lib/types'
 import { QUESTIONS } from '@/lib/constants'
 import {
   createAssessment as apiCreateAssessment,
@@ -27,7 +27,6 @@ const CATEGORY_TO_PROBLEM_TYPE: Record<string, string> = {
 export function useAssessment() {
   const [step, setStep] = useState<AssessmentStep>('question')
   const [questionIndex, setQuestionIndex] = useState(0)
-  const [responses, setResponses] = useState<UserResponse[]>([])
   const [insightText, setInsightText] = useState<string | null>(null)
   const [emailUnlocked, setEmailUnlocked] = useState(false)
 
@@ -42,6 +41,9 @@ export function useAssessment() {
 
   // Track time spent per question
   const questionStartTime = useRef<number>(Date.now())
+
+  // Prevent duplicate submissions
+  const submittedQuestions = useRef<Set<number>>(new Set())
 
   const currentQuestion = QUESTIONS[questionIndex] ?? null
   const totalQuestions = QUESTIONS.length
@@ -64,58 +66,61 @@ export function useAssessment() {
       const q = QUESTIONS[questionIndex]
       if (!q) return
 
-      const newResponse: UserResponse = {
-        step: q.step,
-        question: q.question,
-        answer,
-      }
-      setResponses(prev => [...prev, newResponse])
-
       // Calculate time spent
       const timeSpentMs = Date.now() - questionStartTime.current
+
+      // Show loading state — disable input
+      setInsightText('Saving your response...')
+      setError(null)
 
       try {
         // Ensure assessment exists
         const aId = await ensureAssessment()
 
-        // Determine answerText vs answerValue
-        const isSelect = q.type === 'select'
-        const payload = {
-          questionId: q.step,
-          ...(isSelect ? { answerValue: answer } : { answerText: answer }),
-          timeSpentMs,
-          questionOrder: q.step,
-        }
-
-        const result = await apiSubmitResponse(aId, payload)
-
-        track('question_answered', {
-          question_number: q.step,
-          question_type: q.type,
-          answer_length: answer.length,
-          time_spent_ms: timeSpentMs,
-          ...(q.step === 3 ? { answer_value: answer } : {}),
-        })
-
-        // Use BE micro-insight if available, fallback to generic
-        const insight = result.microInsight?.insightText || 'Processing your response...'
-        setInsightText(insight)
-      } catch {
-        // Fallback: show generic insight, don't block the flow
-        setInsightText('Processing your response...')
-      }
-
-      // After a brief pause for the insight toast, advance
-      const nextIndex = questionIndex + 1
-      setTimeout(() => {
-        setInsightText(null)
-        questionStartTime.current = Date.now()
-        if (nextIndex < QUESTIONS.length) {
-          setQuestionIndex(nextIndex)
+        // Skip if already submitted (prevents double-submit)
+        if (submittedQuestions.current.has(q.step)) {
+          // Already submitted, just advance
         } else {
-          setStep('analysis')
+          // Determine answerText vs answerValue
+          const isSelect = q.type === 'select'
+          const payload = {
+            questionId: q.step,
+            ...(isSelect ? { answerValue: answer } : { answerText: answer }),
+            timeSpentMs,
+            questionOrder: q.step,
+          }
+
+          const result = await apiSubmitResponse(aId, payload)
+          submittedQuestions.current.add(q.step)
+
+          track('question_answered', {
+            question_number: q.step,
+            question_type: q.type,
+            answer_length: answer.length,
+            time_spent_ms: timeSpentMs,
+          })
+
+          // Use BE micro-insight if available
+          const insight = result.microInsight?.insightText || 'Processing your response...'
+          setInsightText(insight)
         }
-      }, 2000)
+
+        // After a brief pause for the insight, advance to next question
+        const nextIndex = questionIndex + 1
+        setTimeout(() => {
+          setInsightText(null)
+          questionStartTime.current = Date.now()
+          if (nextIndex < QUESTIONS.length) {
+            setQuestionIndex(nextIndex)
+          } else {
+            setStep('analysis')
+          }
+        }, 2000)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to save response'
+        setInsightText(null)
+        setError(message)
+      }
     },
     [questionIndex, ensureAssessment],
   )
@@ -178,13 +183,12 @@ export function useAssessment() {
     questionIndex,
     currentQuestion,
     totalQuestions,
-    responses,
     insightText,
     emailUnlocked,
     answerQuestion,
     completeAnalysis,
     submitEmail,
-    // New API state
+    // API state
     assessmentId,
     reportToken,
     previewData,
@@ -193,5 +197,6 @@ export function useAssessment() {
     error,
     userEmail,
     runPipeline,
+    ensureAssessment,
   }
 }

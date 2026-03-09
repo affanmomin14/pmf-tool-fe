@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 import { motion } from 'framer-motion'
 
-import { PREVIEW_SIGNALS, REPORT_SECTIONS } from '@/lib/constants'
+import { PREVIEW_SIGNALS } from '@/lib/constants'
 import type { PreviewContent, PreviewSignal } from '@/lib/types'
 
 interface PreviewCardsProps {
@@ -20,7 +20,11 @@ const SEVERITY_MAP: Record<string, { bg: string; border: string; icon: string; b
   strength: { bg: '#ECFDF5', border: '#A7F3D0', icon: '🟢', badge: 'Strength', barColor: '#10B981' },
 }
 
-const LOCKED_SECTIONS = REPORT_SECTIONS.slice(3, 6)
+const LOCKED_SECTIONS = [
+  { id: 'market', icon: '03', title: 'Market Analysis' },
+  { id: 'competitors', icon: '05', title: 'Competitive Landscape' },
+  { id: 'positioning', icon: '06', title: 'Positioning Audit' },
+]
 
 const ease = [0.25, 1, 0.5, 1] as const
 

@@ -69,61 +69,132 @@ export interface PreviewContent {
   strengths: string[]
 }
 
-export interface ScorecardDimension {
-  dimension: string
-  score: number
-  label: 'critical' | 'weak' | 'moderate' | 'solid' | 'strong'
-  insight: string
-}
+/* ── PRD-aligned report data ── */
 
 export interface ReportData {
   header: {
-    companyName: string
+    product_name: string
     category: string
-    subCategory: string
-    assessmentDate: string
-    pmfScore: number
-    pmfStage: string
+    pmf_score: number
+    benchmark_score: number
+    pmf_stage: 'pre_pmf' | 'approaching' | 'early_pmf' | 'strong'
+    primary_break: string
+    category_risk: 'low' | 'medium' | 'high'
     verdict: string
   }
   reality_check: {
-    summary: string
-    strengths: string[]
-    concerns: string[]
+    comparisons: Array<{
+      you_said: string
+      research_shows: string
+      severity: 'critical' | 'warning' | 'aligned'
+      question_ref: 'q1' | 'q2' | 'q3' | 'q4' | 'q5'
+    }>
+    root_cause: string
   }
-  scorecard: ScorecardDimension[]
+  scorecard: {
+    dimensions: Array<{
+      name: string
+      score: number
+      benchmark: number
+      status: 'critical' | 'at_risk' | 'on_track' | 'strong'
+      evidence: string
+      confidence?: 'low' | 'medium' | 'high'
+    }>
+  }
   market: {
-    tam: string | null
-    sam: string | null
-    growthRate: string | null
-    positioning: string
-    opportunity: string
+    tam: { value: string; description: string }
+    sam: { value: string; description: string }
+    growth_rate: { value: string; description: string }
+    regions: Array<{
+      name: string
+      percentage: number
+      value: string
+      note: string
+    }>
+    real_number_analysis: string
   }
   sales_model: {
-    current: string
-    recommended: string
-    reasoning: string
+    comparison: {
+      you_said: string
+      research_shows: string
+      severity: string
+    }
+    models_table: Array<{
+      model: string
+      who_uses: string
+      acv_range: string
+      conversion: string
+      your_fit: string
+    }>
+    diagnosis: string
+    options: Array<{
+      title: string
+      icon: string
+      pros: string[]
+      cons: string[]
+      timeline: string
+      best_if: string
+    }>
   }
   competitors: {
-    name: string
-    comparison: string
-    threatLevel: 'low' | 'medium' | 'high'
-  }[]
+    competitor_list: Array<{
+      name: string
+      rating: number
+      funding: string
+      tier: 'direct' | 'incumbent' | 'adjacent' | 'invisible'
+    }>
+    tiers: Array<{
+      tier_name: string
+      companies: string
+      why: string
+    }>
+    complaints: Array<{
+      complaint: string
+      percentage: string
+      opportunity: string
+    }>
+  }
   positioning: {
-    current: string
-    recommended: string
-    gap: string
+    current: {
+      text: string
+      critique: string[]
+    }
+    recommended: {
+      text: string
+      improvements: string[]
+    }
   }
   bottom_line: {
-    summary: string
-    primaryBreak: string
-    nextSteps: string[]
+    verdict: string
+    verdict_detail: string
+    working: string[]
+    not_working: string[]
+    score_progression: Array<{
+      label: string
+      score: string
+      detail: string
+    }>
+    one_thing: {
+      title: string
+      explanation: string
+    }
+    research_stats: Array<{
+      number: string
+      label: string
+    }>
   }
-  recommendations: {
+  recommendations: Array<{
+    rank: number
     title: string
-    description: string
-    priority: 'high' | 'medium' | 'low'
-    timeframe: string
-  }[]
-  sources?: string[]
+    action: string
+    evidence: string
+    timeline: string
+    effort: 'low' | 'medium' | 'high'
+  }>
+  sources: Array<{
+    name: string
+    year: string
+    used_for: string
+    source_url?: string | null
+  }>
 }

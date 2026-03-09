@@ -499,3 +499,98 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== Print / PDF mode ===== */
+.print-mode,
+.print-mode * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.print-mode .report-shimmer::after {
+  display: none !important;
+}
+
+/* Prevent cards, charts, and sections from being cut across pages */
+.print-mode .report-hero,
+.print-mode [class*="SpotlightCard"],
+.print-mode [class*="InsightCard"],
+.print-mode [class*="rounded-2xl"],
+.print-mode [class*="rounded-3xl"],
+.print-mode .recharts-wrapper,
+.print-mode .grid > div {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Each major grid row should try to avoid breaking */
+.print-mode .grid {
+  break-inside: auto !important;
+}
+
+/* Add small spacing between page-broken sections for breathing room */
+.print-mode .grid > div {
+  margin-bottom: 8px;
+}
+
+/* Ensure SVGs and charts render at full size */
+.print-mode .recharts-responsive-container {
+  min-height: 200px !important;
+}
+
+/* Hide interactive-only elements in print */
+.print-mode button,
+.print-mode [role="button"] {
+  display: none !important;
+}
+
+/* Page breaks before key sections in print */
+.print-mode .print-break-before {
+  break-before: page !important;
+  page-break-before: always !important;
+}
+
+/* Static render for animated elements */
+.print-mode .score-glow,
+.print-mode svg circle[stroke-dasharray] {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Solid background fallback for dark sections */
+.print-mode .report-hero {
+  background: #0F172A !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.print-mode .report-hero::before {
+  display: none !important;
+}
+
+/* Ensure backgrounds render */
+.print-mode {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+@media print {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-hero,
+  [class*="rounded-2xl"],
+  [class*="rounded-3xl"],
+  .recharts-wrapper,
+  .grid > div {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
