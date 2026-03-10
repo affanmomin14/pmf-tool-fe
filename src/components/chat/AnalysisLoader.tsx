@@ -14,7 +14,6 @@ interface AnalysisLoaderProps {
 
 const FACT_INTERVAL = 5000
 
-/* SVG pulse paths from ReverseUI data-feeding-in */
 const paths = [
   'M0 100H55.022C61.8914 100 68.6451 101.769 74.6324 105.137L120.368 130.863C126.355 134.231 133.109 136 139.978 136H201.5',
   'M0 60H48.2171C59.2463 60 69.7861 64.5539 77.3451 72.5854L117.655 115.415C125.214 123.446 135.754 128 146.783 128H201.5',
@@ -25,10 +24,8 @@ const paths = [
   'M0 1H41.5946C56.3171 1 69.8495 9.08744 76.823 22.0537L118.177 98.9463C125.15 111.913 138.683 120 153.405 120H201.5',
 ]
 
-/* Column labels for the flowing table */
 const TABLE_HEADERS = ['Dimension', 'Score', 'Status']
 
-/* Row data for flowing table — represents analysis dimensions */
 const TABLE_ROWS = [
   ['Retention', '72', 'Strong'],
   ['Positioning', '45', 'Emerging'],
@@ -47,7 +44,6 @@ export function AnalysisLoader({ onComplete, pipelineReady }: AnalysisLoaderProp
   const minAnimDone = useRef(false)
   const pipelineDone = useRef(false)
 
-  // Animate pulse gradients
   useEffect(() => {
     if (!svgRef.current) return
 
