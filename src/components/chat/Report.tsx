@@ -28,6 +28,13 @@ interface ReportProps {
    CONSTANTS & HELPERS
    ═══════════════════════════════════════════════════════ */
 
+// Helper to remove placeholder strings
+function isValidContent(str: string | null | undefined): str is string {
+  if (!str) return false
+  const placeholders = ['data not available', '[not available]']
+  return !placeholders.some(p => str.toLowerCase().includes(p))
+}
+
 const STAGE_LABELS: Record<string, string> = {
   pre_pmf: 'Pre-PMF',
   approaching: 'Emerging',
@@ -293,7 +300,7 @@ function RealityCheckSection({ data, hasLowConfidence }: { data: ReportData['rea
             </SpotlightCard>
           )
         })}
-        {data.root_cause && !data.root_cause.includes('Data not available') && (
+        {data.root_cause && isValidContent(data.root_cause) && (
           <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Root Cause</p>
             <p className="text-[13.5px] text-slate-700 leading-relaxed">{data.root_cause}</p>
@@ -354,7 +361,7 @@ function ScorecardSection({ data }: { data: ReportData['scorecard'] }) {
                   transition={{ delay: 0.3, duration: 0.7, ease }}
                 />
               </div>
-              {dim.evidence && !dim.evidence.includes('Data not available') && (
+              {dim.evidence && isValidContent(dim.evidence) && (
                 <p className="text-[12px] text-slate-500 leading-relaxed">{dim.evidence}</p>
               )}
             </div>
@@ -374,7 +381,7 @@ function MarketSection({ data }: { data: ReportData['market'] }) {
     { label: 'TAM', ...data.tam, color: '#6366F1' },
     { label: 'SAM', ...data.sam, color: '#8B5CF6' },
     { label: 'GROWTH', ...data.growth_rate, color: '#A855F7' },
-  ].filter(s => s.value && !s.value.includes('Data not available'))
+  ].filter(s => isValidContent(s.value))
 
   return (
     <div className="space-y-4">
@@ -418,7 +425,7 @@ function MarketSection({ data }: { data: ReportData['market'] }) {
         </SpotlightCard>
       )}
 
-      {data.real_number_analysis && !data.real_number_analysis.includes('Data not available') && (
+      {data.real_number_analysis && isValidContent(data.real_number_analysis) && (
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
           <p className="text-[13px] text-slate-600 leading-relaxed">{data.real_number_analysis}</p>
         </div>
@@ -471,16 +478,16 @@ function SalesModelSection({ data }: { data: ReportData['sales_model'] }) {
                   <tr key={i} className="border-b border-slate-50">
                     <td className="py-2.5 pr-3 font-medium text-slate-700">{row.model}</td>
                     <td className="py-2.5 pr-3 text-slate-500">
-                      {row.who_uses?.includes('Data not available') ? '-' : row.who_uses}
+                      {isValidContent(row.who_uses) ? row.who_uses : '-'}
                     </td>
                     <td className="py-2.5 pr-3 text-slate-500 tabular-nums">
-                      {row.acv_range?.includes('Data not available') ? '-' : row.acv_range}
+                      {isValidContent(row.acv_range) ? row.acv_range : '-'}
                     </td>
                     <td className="py-2.5 pr-3 text-slate-500 tabular-nums">
-                      {row.conversion?.includes('Data not available') ? '-' : row.conversion}
+                      {isValidContent(row.conversion) ? row.conversion : '-'}
                     </td>
                     <td className="py-2.5 text-slate-600 font-medium">
-                      {row.your_fit?.includes('Data not available') ? '-' : row.your_fit}
+                      {isValidContent(row.your_fit) ? row.your_fit : '-'}
                     </td>
                   </tr>
                 ))}
@@ -491,7 +498,7 @@ function SalesModelSection({ data }: { data: ReportData['sales_model'] }) {
       </SpotlightCard>
 
       {/* Diagnosis */}
-      {data.diagnosis && !data.diagnosis.includes('Data not available') && (
+      {data.diagnosis && isValidContent(data.diagnosis) && (
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
           <p className="text-[13px] text-slate-600 leading-relaxed">{data.diagnosis}</p>
         </div>
@@ -567,15 +574,15 @@ function CompetitorsSection({ data }: { data: ReportData['competitors'] }) {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                  {!String(c.rating).includes('Data not available') && (
+                  {isValidContent(String(c.rating)) && typeof c.rating === 'number' && (
                     <span>Rating: <strong className="text-slate-700">{c.rating}/5</strong></span>
                   )}
-                  {c.funding && !c.funding.includes('Data not available') && (
+                  {isValidContent(c.funding) && (
                     <span>Funding: <strong className="text-slate-700">{c.funding}</strong></span>
                   )}
                 </div>
                 {/* Rating bar */}
-                {!String(c.rating).includes('Data not available') && (
+                {isValidContent(String(c.rating)) && typeof c.rating === 'number' && (
                   <div className="mt-2 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
@@ -617,7 +624,7 @@ function CompetitorsSection({ data }: { data: ReportData['competitors'] }) {
           <div className="space-y-3">
             {data.complaints.map((c, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-amber-50/50 border border-amber-100/50">
-                {!c.percentage.includes('Data not available') && (
+                {isValidContent(String(c.percentage)) && (
                   <span className="text-[12px] font-bold text-amber-600 tabular-nums shrink-0">{c.percentage}</span>
                 )}
                 <div className="flex-1">
@@ -801,7 +808,7 @@ function RecommendationsSection({ data }: { data: ReportData['recommendations'] 
                     <span className="text-[10px] text-slate-400">{rec.timeline}</span>
                   </div>
                   <p className="text-[12.5px] text-slate-700 leading-relaxed mb-1">{rec.action}</p>
-                  {rec.evidence && !rec.evidence.includes('Data not available') && (
+                  {rec.evidence && isValidContent(rec.evidence) && (
                     <p className="text-[11px] text-slate-500 leading-relaxed">{rec.evidence}</p>
                   )}
                 </div>
