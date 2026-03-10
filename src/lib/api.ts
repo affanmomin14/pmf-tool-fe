@@ -60,6 +60,23 @@ export function completeAssessment(assessmentId: string) {
   }>(`/api/assessments/${assessmentId}/complete`, { method: 'POST' })
 }
 
+export function getAssessmentStatus(assessmentId: string) {
+  return request<{
+    id: string
+    status: string
+    reportToken?: string
+    previewContent?: {
+      pmfScore: number
+      pmfStage: string
+      verdict: string
+      primaryBreak: string
+      strengths: string[]
+    }
+    pmfScore?: number
+    pmfStage?: string
+  }>(`/api/assessments/${assessmentId}`)
+}
+
 export function getReport(token: string) {
   return request<{
     isExpired: boolean

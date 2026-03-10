@@ -8,6 +8,7 @@ import {
   createAssessment as apiCreateAssessment,
   submitResponse as apiSubmitResponse,
   completeAssessment as apiCompleteAssessment,
+  getAssessmentStatus as apiGetAssessmentStatus,
   getReport as apiGetReport,
   submitLead as apiSubmitLead,
 } from '@/lib/api'
@@ -132,10 +133,53 @@ export function useAssessment() {
     track('analysis_started', { assessment_id: assessmentId })
     const startTime = Date.now()
     try {
-      const result = await apiCompleteAssessment(assessmentId)
-      setReportToken(result.reportToken)
-      setPreviewData(result.previewContent)
-      track('analysis_completed', { assessment_id: assessmentId, duration_ms: Date.now() - startTime })
+      const completeResult = await apiCompleteAssessment(assessmentId)
+
+      // If the server returned the report directly (cached/idempotent), use it
+      if (completeResult.reportToken) {
+        setReportToken(completeResult.reportToken)
+        setPreviewData(completeResult.previewContent)
+        track('analysis_completed', { assessment_id: assessmentId, duration_ms: Date.now() - startTime })
+        return
+      }
+
+      // Server returned 202 — poll for completion
+      const POLL_INTERVAL = 3000
+      const MAX_POLL_TIME = 5 * 60 * 1000 // 5 minutes
+
+      const poll = (): Promise<void> =>
+        new Promise((resolve, reject) => {
+          const interval = setInterval(async () => {
+            try {
+              const status = await apiGetAssessmentStatus(assessmentId)
+
+              if (status.status === 'report_generated' || status.status === 'unlocked') {
+                clearInterval(interval)
+                if (status.reportToken) {
+                  setReportToken(status.reportToken)
+                }
+                if (status.previewContent) {
+                  setPreviewData(status.previewContent)
+                }
+                track('analysis_completed', {
+                  assessment_id: assessmentId,
+                  duration_ms: Date.now() - startTime,
+                })
+                resolve()
+              }
+
+              if (Date.now() - startTime > MAX_POLL_TIME) {
+                clearInterval(interval)
+                reject(new Error('Analysis is taking longer than expected. Please try refreshing.'))
+              }
+            } catch (pollErr) {
+              clearInterval(interval)
+              reject(pollErr)
+            }
+          }, POLL_INTERVAL)
+        })
+
+      await poll()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Pipeline failed'
       setError(message)
