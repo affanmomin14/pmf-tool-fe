@@ -492,7 +492,7 @@ function QuestionStep({
 /* ─────────────────────────────────────────────
  *  Analysis Step (with pipeline integration)
  * ───────────────────────────────────────────── */
-function AnalysisStep({ onComplete, pipelineReady }: { onComplete: () => void; pipelineReady: boolean }) {
+function AnalysisStep({ onComplete, pipelineReady, error, onRetry }: { onComplete: () => void; pipelineReady: boolean; error?: string | null; onRetry?: () => void }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -502,6 +502,20 @@ function AnalysisStep({ onComplete, pipelineReady }: { onComplete: () => void; p
             className="flex items-center justify-center min-h-[calc(100vh-52px)] px-6 py-12"
         >
             <div className="w-full max-w-lg">
+                {error && (
+                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50/80 p-4 text-center">
+                        <p className="text-[13px] text-red-700">{error}</p>
+                        {onRetry && (
+                            <button
+                                type="button"
+                                onClick={onRetry}
+                                className="mt-3 px-4 py-2 text-[13px] font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                            >
+                                Try again
+                            </button>
+                        )}
+                    </div>
+                )}
                 <AnalysisLoader onComplete={onComplete} pipelineReady={pipelineReady} />
             </div>
         </motion.div>
@@ -665,7 +679,13 @@ export function AssessmentWizard() {
                 )}
 
                 {step === 'analysis' && (
-                    <AnalysisStep key="analysis" onComplete={handleAnalysisComplete} pipelineReady={pipelineReady} />
+                    <AnalysisStep
+                        key="analysis"
+                        onComplete={handleAnalysisComplete}
+                        pipelineReady={pipelineReady}
+                        error={error}
+                        onRetry={() => runPipeline().then(() => setPipelineReady(true))}
+                    />
                 )}
 
                 {step === 'preview' && (

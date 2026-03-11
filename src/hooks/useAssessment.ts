@@ -145,7 +145,7 @@ export function useAssessment() {
 
       // Server returned 202 — poll for completion
       const POLL_INTERVAL = 5000
-      const MAX_POLL_TIME = 5 * 60 * 1000 // 5 minutes
+      const MAX_POLL_TIME = 3 * 60 * 1000 // 3 minutes (pipeline typically completes in 45–90s)
 
       const poll = (): Promise<void> =>
         new Promise((resolve, reject) => {
@@ -170,7 +170,7 @@ export function useAssessment() {
 
               if (Date.now() - startTime > MAX_POLL_TIME) {
                 clearInterval(interval)
-                reject(new Error('Analysis is taking longer than expected. Please try refreshing.'))
+                reject(new Error('Analysis is taking longer than expected. Use "Try again" below — we’ll pick up where you left off.'))
               }
             } catch (pollErr) {
               clearInterval(interval)
