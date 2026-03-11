@@ -144,7 +144,7 @@ export function useAssessment() {
       }
 
       // Server returned 202 — poll for completion
-      const POLL_INTERVAL = 3000
+      const POLL_INTERVAL = 5000
       const MAX_POLL_TIME = 5 * 60 * 1000 // 5 minutes
 
       const poll = (): Promise<void> =>
