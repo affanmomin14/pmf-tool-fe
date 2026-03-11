@@ -145,7 +145,7 @@ export function useAssessment() {
 
       // Server returned 202 — poll for completion
       const POLL_INTERVAL = 5000
-      const MAX_POLL_TIME = 3 * 60 * 1000 // 3 minutes (pipeline typically completes in 45–90s)
+      const MAX_POLL_TIME = 5 * 60 * 1000 // 5 minutes (logs show pipelines can reach 110–177s under load)
 
       const poll = (): Promise<void> =>
         new Promise((resolve, reject) => {
