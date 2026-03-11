@@ -168,6 +168,11 @@ export function useAssessment() {
                 resolve()
               }
 
+              if (status.pipelineErrorMessage) {
+                clearInterval(interval)
+                reject(new Error(status.pipelineErrorMessage))
+              }
+
               if (Date.now() - startTime > MAX_POLL_TIME) {
                 clearInterval(interval)
                 reject(new Error('Analysis is taking longer than expected. Use "Try again" below — we’ll pick up where you left off.'))

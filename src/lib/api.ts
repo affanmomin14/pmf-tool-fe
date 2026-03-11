@@ -64,6 +64,7 @@ export function getAssessmentStatus(assessmentId: string) {
   return request<{
     id: string
     status: string
+    pipelineErrorMessage?: string | null
     reportToken?: string
     previewContent?: {
       pmfScore: number
